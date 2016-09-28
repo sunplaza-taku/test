@@ -1,1 +1,192 @@
+package test2
+
+import (
+	"net/http"
+	"io/ioutil"
+	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/gin-gonic/gin"
+
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/google"
+
+	"google.golang.org/api/bigquery/v2"
+)
+
+// Push API Data Structure - iOS
+type IOS struct {
+	event_type                      string `json:"event_type"`
+	attribution_type                string `json:"attribution_type"`
+	click_time                      string `json:"click_time"`
+	download_time                   string `json:"download_time"`
+	install_time                    string `json:"install_time"`
+	media_source                    string `json:"media_source"`
+	agency                          string `json:"agency"`
+	af_channel                      string `json:"af_channel"`
+	af_keywords                     string `json:"af_keywords"`
+	campaign                        string `json:"campaign"`
+	af_c_id                         string `json:"af_c_id"`
+	af_adset                        string `json:"af_adset"`
+	af_adset_id                     string `json:"af_adset_id"`
+	af_ad                           string `json:"af_ad"`
+	af_ad_id                        string `json:"af_ad_id"`
+	fb_campaign_name                string `json:"fb_campaign_name"`
+	fb_campaign_id                  string `json:"fb_campaign_id"`
+	fb_adset_name                   string `json:"fb_adset_name"`
+	fb_adset_id                     string `json:"fb_adset_id"`
+	fb_adgroup_name                 string `json:"fb_adgroup_name"`
+	fb_adgroup_id                   string `json:"fb_adgroup_id"`
+	af_ad_type                      string `json:"af_ad_type"`
+	af_siteid                       string `json:"af_siteid"`
+	af_sub1                         string `json:"af_sub1"`
+	af_sub2                         string `json:"af_sub2"`
+	af_sub3                         string `json:"af_sub3"`
+	af_sub4                         string `json:"af_sub4"`
+	af_sub5                         string `json:"af_sub5"`
+	http_referrer                   string `json:"http_referrer"`
+	click_url                       string `json:"click_url"`
+	af_cost_model                   string `json:"af_cost_model"`
+	af_cost_value                   string `json:"af_cost_value"`
+	af_cost_currency                string `json:"af_cost_currency"`
+	cost_per_install                string `json:"cost_per_install"`
+	is_retargeting                  string `json:"is_retargeting"`
+	re_targeting_conversion_type    string `json:"re_targeting_conversion_type"`
+	country_code                    string `json:"country_code"`
+	city                            string `json:"city"`
+	ip                              string `json:"ip"`
+	wifi                            string `json:"wifi"`
+	mac                             string `json:"mac"`
+	language                        string `json:"language"`
+	appsflyer_device_id             string `json:"appsflyer_device_id"`
+	idfa                            string `json:"idfa"`
+	customer_user_id                string `json:"customer_user_id"`
+	idfv                            string `json:"idfv"`
+	platform                        string `json:"platform"`
+	device_type                     string `json:"device_type"`
+	device_name                     string `json:"device_name"`
+	os_version                      string `json:"os_version"`
+	app_version                     string `json:"app_version"`
+	sdk_version                     string `json:"sdk_version"`
+	app_id                          string `json:"app_id"`
+	app_name                        string `json:"app_name"`
+	event_time                      string `json:"event_time"`
+	event_name                      string `json:"event_name"`
+	event_value                     string `json:"event_value"`
+	currency                        string `json:"currency"`
+	download_time_selected_timezone string `json:"download_time_selected_timezone"`
+	click_time_selected_timezone    string `json:"click_time_selected_timezone"`
+	install_time_selected_timezone  string `json:"install_time_selected_timezone"`
+	event_time_selected_timezone    string `json:"event_time_selected_timezone"`
+	selected_currency               string `json:"selected_currency"`
+	revenue_in_selected_currency    string `json:"revenue_in_selected_currency"`
+	cost_in_selected_currency       string `json:"cost_in_selected_currency"`
+}
+
+func initGin() {
+	router := gin.Default()
+	router.POST("/ping", func(c *gin.Context) {
+
+
+		log.Println("Hello logging")
+
+		body := c.Request.Body
+		x, _ := ioutil.ReadAll(body)
+
+		log.Println(string(x))
+		//
+		//
+		//
+		var ios IOS
+		err := json.Unmarshal([]byte(x), &ios)
+		if err != nil {
+
+			log.Println(err)
+
+			fmt.Println(err )
+			c.String(400, "Bad request")
+			return
+		}
+		//fmt.Println(ios)
+
+		sample();
+
+		c.String(200, "Hello, world!")
+	})
+	http.Handle("/", router)
+}
+
+
+
+func sample() {
+
+	log.Println("--- start ----")
+
+
+	ctx := context.Background()
+	hc, err := google.DefaultClient(ctx, bigquery.BigqueryScope)
+	if err != nil {
+		// TODO: Handle error.
+	}
+	c, err := bigquery.New(hc)
+	if err != nil {
+		// TODO: Handle error.
+	}
+
+	// Project ID of the destination table.
+	projectId := "" // TODO: Update placeholder value.
+
+	// Dataset ID of the destination table.
+	datasetId := "" // TODO: Update placeholder value.
+
+	// Table ID of the destination table.
+	tableId := "" // TODO: Update placeholder value.
+
+
+
+
+	rows := make([]*bigquery.TableDataInsertAllRequestRows, 1)
+
+	rows[0] = &bigquery.TableDataInsertAllRequestRows{
+		//InsertId:"",
+		Json: map[string]bigquery.JsonValue{
+			"col1":       "country",
+			"col2":       "Shizuoka",
+		},
+	}
+
+
+
+	resp, err := c.Tabledata.InsertAll(projectId, datasetId, tableId, &bigquery.TableDataInsertAllRequest{
+		// TODO: Fill required fields.
+		IgnoreUnknownValues: true,
+		SkipInvalidRows: false,
+		Kind: "bigquery#tableDataInsertAllRequest",
+		Rows: rows,
+	}).Do()
+//}).Context(ctx).Do()
+	if err != nil {
+		// TODO: Handle error.
+		log.Println(err)
+	}
+	// TODO: Use resp.
+	_ = resp
+
+	log.Println("--- end ----")
+}
+
+
+
+
+
+func init() {
+	//	http.HandleFunc("/hello", handler)
+	initGin()
+}
+
+//func handler(w http.ResponseWriter, r *http.Request) {
+//	fmt.Fprint(w, "Hello, world!")
+//}
 aaa
